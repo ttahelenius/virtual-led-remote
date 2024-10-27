@@ -1,0 +1,4 @@
+Transmit = program/that/transmits/IR/codes
+TransmitDaemon = possible/daemon/required/by/Transmit
+Solver = python/script/to/solve/command/overlap
+Savefile = file/that/will/be/used/to/store/last/settings
