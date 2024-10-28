@@ -55,6 +55,7 @@ public class DynamicButtonPanel extends ButtonComponentGlowPanel {
       @Override
       public void componentResized(ComponentEvent e) {
         refreshLayout();
+        getRootPane().repaint();
       }
     });
   }

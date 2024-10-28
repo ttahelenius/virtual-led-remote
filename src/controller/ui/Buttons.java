@@ -26,6 +26,8 @@ class Buttons {
                                                    .deriveFont(22f)
                                                    .deriveFont(AffineTransform.getTranslateInstance(1.4, 2.4));
 
+  static final Button UNDO = new Button("⏮", null);
+  static final Button REDO = new Button("⏭", null);
 
   static final List<Button> BACKLED_BUTTONS = asList(
       new Button("on",  "on",     DONT_SAVE_INPUT),
