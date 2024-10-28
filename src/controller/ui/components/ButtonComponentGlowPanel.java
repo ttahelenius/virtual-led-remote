@@ -16,11 +16,11 @@ public class ButtonComponentGlowPanel extends JPanel {
   private ButtonComponent hovered;
   private ButtonComponent held;
 
-  ButtonComponentGlowPanel() {
+  public ButtonComponentGlowPanel() {
     super();
   }
 
-  ButtonComponentGlowPanel(LayoutManager layout) {
+  public ButtonComponentGlowPanel(LayoutManager layout) {
     super(layout);
   }
 
@@ -38,11 +38,11 @@ public class ButtonComponentGlowPanel extends JPanel {
   }
 
   boolean isHeld(ButtonComponent button) {
-    return held == button && hovered == button;
+    return held == button && button.isEnabled() && hovered == button;
   }
 
   boolean isGlowing(ButtonComponent button) {
-    return hovered == button && !isHeld(button);
+    return hovered == button && button.isEnabled() && !isHeld(button);
   }
 
   @Override
@@ -55,7 +55,7 @@ public class ButtonComponentGlowPanel extends JPanel {
   protected void paintComponent(Graphics g) {
     super.paintComponent(g);
 
-    if (hovered == null)
+    if (hovered == null || !hovered.isEnabled())
       return;
 
     Graphics2D g2d = (Graphics2D)g;

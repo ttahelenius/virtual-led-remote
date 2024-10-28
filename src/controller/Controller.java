@@ -1,11 +1,13 @@
 package controller;
 
+import controller.StateHistory.DeviceState;
 import controller.ui.UI;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static controller.InputStore.readAccess;
 
@@ -19,6 +21,9 @@ public class Controller {
 
   private static final InputStore SAVE_FILE;
   private static final CommandTransmitManager TRANSMIT_MANAGER;
+
+  private static final StateHistory STATE_HISTORY = new StateHistory();
+  private static final List<StateHistory.ChangeListener> STATE_CHANGE_LISTENERS = new ArrayList<>();
 
   static {
     Properties properties = new Properties();
@@ -50,6 +55,8 @@ public class Controller {
           + "The IR command will be sent without resolving potential conflicts. Proceed?");
       TRANSMIT_MANAGER = CommandTransmitManager.direct(Controller::sendCode);
     }
+
+    saveStateToHistory();
   }
 
   private static void checkPaths(String... paths) {
@@ -119,6 +126,54 @@ public class Controller {
 
   private static void executeCommand(String... command) {
     ProcessUtil.execute(command);
+  }
+
+  public static void undo() {
+    try {
+      Collection<DeviceState> newStates = STATE_HISTORY.loadPrevious();
+      for (DeviceState deviceState : newStates) {
+        pressButton(deviceState.device, deviceState.state, true, false);
+      }
+      stateHistoryChanged();
+    } catch (IllegalStateException e) {
+      exit(e);
+    }
+  }
+
+  public static void redo() {
+    try {
+      Collection<DeviceState> newStates = STATE_HISTORY.loadNext();
+      for (DeviceState deviceState : newStates) {
+        pressButton(deviceState.device, deviceState.state, true, false);
+      }
+      stateHistoryChanged();
+    } catch (IllegalStateException e) {
+      exit(e);
+    }
+  }
+
+  public static void saveStateToHistory() {
+    List<DeviceState> deviceStates = Arrays.stream(Device.values())
+        .map(d -> new DeviceState(d, SAVE_FILE.loadInput(d)))
+        .collect(Collectors.toList());
+    STATE_HISTORY.save(deviceStates);
+    stateHistoryChanged();
+  }
+
+  public static boolean canUndo() {
+    return STATE_HISTORY.hasPrevious();
+  }
+
+  public static boolean canRedo() {
+    return STATE_HISTORY.hasNext();
+  }
+
+  public static void addStateChangeListener(StateHistory.ChangeListener listener) {
+    STATE_CHANGE_LISTENERS.add(listener);
+  }
+
+  private static void stateHistoryChanged() {
+    STATE_CHANGE_LISTENERS.forEach(StateHistory.ChangeListener::stateChanged);
   }
 
 }

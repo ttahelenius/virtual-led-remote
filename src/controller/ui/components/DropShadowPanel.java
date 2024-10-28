@@ -5,6 +5,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -17,15 +18,15 @@ public class DropShadowPanel extends JPanel {
   private final int umbraAlpha;
   private final int penumbraWidth;
   private final Point offset;
-  private final int subComponentSearchDepth;
+  private final List<Component> shadowCastingSubComponents;
 
-  private DropShadowPanel(LayoutManager layout, int umbraAlpha, int penumbraWidth, Point offset, int subComponentSearchDepth) {
+  private DropShadowPanel(LayoutManager layout, int umbraAlpha, int penumbraWidth, Point offset, List<Component> shadowCastingSubComponents) {
     super(layout);
 
     this.umbraAlpha = umbraAlpha;
     this.penumbraWidth = penumbraWidth;
     this.offset = offset;
-    this.subComponentSearchDepth = subComponentSearchDepth;
+    this.shadowCastingSubComponents = shadowCastingSubComponents;
 
     // Approximate exponential decay:
     final double a = -0.5d;
@@ -44,9 +45,9 @@ public class DropShadowPanel extends JPanel {
 
     ((Graphics2D)g).setComposite(AlphaComposite.SrcOver);
 
-    List<Component> componentList = ComponentUtil.gatherComponents(this, subComponentSearchDepth);
-
-    for (Component c : componentList) {
+    for (Component c : shadowCastingSubComponents) {
+      if (c.getWidth() == 0 && c.getHeight() == 0)
+        continue;
       int w = c.getWidth() - penumbraWidth;
       int h = c.getHeight() - penumbraWidth;
       Point position = SwingUtilities.convertPoint(c, offset.x + penumbraWidth / 2, offset.y + penumbraWidth / 2, this);
@@ -65,7 +66,7 @@ public class DropShadowPanel extends JPanel {
     private int umbraAlpha = 255;
     private Integer penumbraWidth;
     private Point offset;
-    private int subComponentSearchDepth = 1;
+    private List<Component> shadowCastingSubComponents;
 
     public Builder setLayout(LayoutManager layout) {
       this.layout = layout;
@@ -87,15 +88,16 @@ public class DropShadowPanel extends JPanel {
       return this;
     }
 
-    public Builder setSubComponentSearchDepth(int subComponentSearchDepth) {
-      this.subComponentSearchDepth = subComponentSearchDepth;
+    public Builder setShadowCastingSubComponents(Component... shadowCastingSubComponents) {
+      this.shadowCastingSubComponents = asList(shadowCastingSubComponents);
       return this;
     }
 
     public DropShadowPanel create() {
+      requireNonNull(shadowCastingSubComponents, "shadowCastingSubComponents is required");
       requireNonNull(penumbraWidth, "penumbraWidth is required");
       requireNonNull(offset, "offset is required");
-      return new DropShadowPanel(layout, umbraAlpha, penumbraWidth, offset, subComponentSearchDepth);
+      return new DropShadowPanel(layout, umbraAlpha, penumbraWidth, offset, shadowCastingSubComponents);
     }
   }
 }

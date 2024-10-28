@@ -7,6 +7,8 @@ import controller.ui.components.*;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
@@ -17,6 +19,8 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static controller.Controller.exit;
+import static controller.ui.Buttons.REDO;
+import static controller.ui.Buttons.UNDO;
 import static javax.swing.BorderFactory.createRaisedBevelBorder;
 import static javax.swing.WindowConstants.DISPOSE_ON_CLOSE;
 
@@ -28,6 +32,7 @@ public class UI {
   private static final Color EMPTY_COLOR = new Color(0, 0, 0, 0);
   private static final Color REMOTE_COLOR = new Color(197, 199, 206);
   private static final Color BUTTONPANE_COLOR = new Color(128, 129, 136);
+  private static final Color CONTROL_PANEL_COLOR = new Color(138, 142, 155);
 
   private static final Supplier<JLabel> BUTTON_PLACEHOLDER_SUPPLIER = JLabel::new;
 
@@ -38,8 +43,8 @@ public class UI {
 
       Container contentPane = window.getContentPane();
       contentPane.setLayout(new BorderLayout());
-      contentPane.add(createControllers(), BorderLayout.CENTER);
       contentPane.add(createCompoundButtonPanel(), BorderLayout.SOUTH);
+      contentPane.add(createControllers(), BorderLayout.CENTER);
 
       window.setSize(885, 860);
       window.setMinimumSize(new Dimension(600, 640));
@@ -104,55 +109,109 @@ public class UI {
   }
 
   private static JPanel createControllers() {
-    AspectRatioPreservingPanel backLedButtons = new AspectRatioPreservingPanel(new GridLayout(6, 4, -4, -4), 0.65f, 5);
-    AspectRatioPreservingPanel frontLedButtons = new AspectRatioPreservingPanel(new GridLayout(12, 4, -4, -4), 0.35f, 5);
-    AspectRatioPreservingPanel potLedButtons = new AspectRatioPreservingPanel(new GridLayout(7, 4, -4, -4), 0.56f, 5);
-    backLedButtons.registerSibling(frontLedButtons);
-    backLedButtons.registerSibling(potLedButtons);
-    frontLedButtons.registerSibling(backLedButtons);
-    frontLedButtons.registerSibling(potLedButtons);
-    potLedButtons.registerSibling(backLedButtons);
-    potLedButtons.registerSibling(frontLedButtons);
+    AspectRatioPreservingPanel backLedController = new AspectRatioPreservingPanel(new GridLayout(6, 4, -4, -4), 0.65f, 5);
+    AspectRatioPreservingPanel frontLedController = new AspectRatioPreservingPanel(new GridLayout(12, 4, -4, -4), 0.35f, 5);
+    AspectRatioPreservingPanel potLedController = new AspectRatioPreservingPanel(new GridLayout(7, 4, -4, -4), 0.56f, 5);
+    backLedController.registerSibling(frontLedController);
+    backLedController.registerSibling(potLedController);
+    frontLedController.registerSibling(backLedController);
+    frontLedController.registerSibling(potLedController);
+    potLedController.registerSibling(backLedController);
+    potLedController.registerSibling(frontLedController);
 
-    populateController(backLedButtons, Device.BACKLED, Buttons.BACKLED_BUTTONS);
-    populateController(frontLedButtons, Device.FRONTLED, Buttons.FRONTLED_BUTTONS);
-    populateController(potLedButtons, Device.POTLED, Buttons.POTLED_BUTTONS);
+    populateController(backLedController, Device.BACKLED, Buttons.BACKLED_BUTTONS);
+    populateController(frontLedController, Device.FRONTLED, Buttons.FRONTLED_BUTTONS);
+    populateController(potLedController, Device.POTLED, Buttons.POTLED_BUTTONS);
 
     Border subBorder1 = BorderFactory.createCompoundBorder(createRaisedBevelBorder(), createRaisedBevelBorder());
     Border subBorder2 = BorderFactory.createEmptyBorder(20, 10, 40, 10);
     Border border = BorderFactory.createCompoundBorder(subBorder1, subBorder2);
 
-    JPanel backLedController = new JPanel(new GridBagLayout()); // Using GridBagLayout yields vertical center alignment
-    backLedController.add(backLedButtons);
-    backLedButtons.setBorder(border);
-    JPanel frontLedController = new JPanel(new GridBagLayout());
-    frontLedController.add(frontLedButtons);
-    frontLedButtons.setBorder(border);
-    JPanel potLedController = new JPanel(new GridBagLayout());
-    potLedController.add(potLedButtons);
-    potLedButtons.setBorder(border);
+    backLedController.setBackground(REMOTE_COLOR);
+    backLedController.setBorder(border);
+    frontLedController.setBackground(REMOTE_COLOR);
+    frontLedController.setBorder(border);
+    potLedController.setBackground(REMOTE_COLOR);
+    potLedController.setBorder(border);
 
-    JPanel controllerPane = new DropShadowPanel.Builder()
-        .setLayout(new GridLayout(1, 3, 40, 0))
+    Container backLedControllerArea = new JPanel(new GridBagLayout()); // Using GridBagLayout yields vertical center alignment
+    backLedControllerArea.setBackground(EMPTY_COLOR);
+    backLedControllerArea.add(backLedController);
+    Container frontLedControllerArea = new JPanel(new GridBagLayout());
+    frontLedControllerArea.setBackground(EMPTY_COLOR);
+    frontLedControllerArea.add(frontLedController);
+    Container potLedControllerArea = new JPanel(new GridBagLayout());
+    potLedControllerArea.setBackground(EMPTY_COLOR);
+    potLedControllerArea.add(potLedController);
+
+    Container controllers = new JPanel(new GridLayout(1, 3, 40, 0));
+    controllers.add(potLedControllerArea);
+    controllers.add(backLedControllerArea);
+    controllers.add(frontLedControllerArea);
+    controllers.setBackground(EMPTY_COLOR);
+
+    Container controlPanel = createControlPanel();
+
+    Container commonArea = createCommonArea(controllers, controlPanel);
+
+    JPanel dropShadowPanel = new DropShadowPanel.Builder()
+        .setLayout(new BorderLayout())
         .setOffset(new Point(16, 30))
         .setUmbraAlpha(90)
         .setPenumbraWidth(15)
-        .setSubComponentSearchDepth(2)
+        .setShadowCastingSubComponents(backLedController, frontLedController, potLedController, controlPanel)
         .create();
-    controllerPane.add(potLedController);
-    controllerPane.add(backLedController);
-    controllerPane.add(frontLedController);
+    dropShadowPanel.add(commonArea, BorderLayout.CENTER);
 
-    controllerPane.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-    controllerPane.setBackground(EMPTY_COLOR);
-    backLedController.setBackground(EMPTY_COLOR);
-    frontLedController.setBackground(EMPTY_COLOR);
-    potLedController.setBackground(EMPTY_COLOR);
-    backLedButtons.setBackground(REMOTE_COLOR);
-    frontLedButtons.setBackground(REMOTE_COLOR);
-    potLedButtons.setBackground(REMOTE_COLOR);
+    dropShadowPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+    dropShadowPanel.setBackground(EMPTY_COLOR);
 
-    return controllerPane;
+    return dropShadowPanel;
+  }
+
+  private static Container createControlPanel() {
+    ButtonComponentGlowPanel controlPanel = new ButtonComponentGlowPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+
+    Border border = BorderFactory.createCompoundBorder(createRaisedBevelBorder(), createRaisedBevelBorder());
+    controlPanel.setBorder(border);
+    controlPanel.setBackground(CONTROL_PANEL_COLOR);
+
+    ButtonComponent undo = new ButtonComponent(UNDO, controlPanel);
+    undo.addActionListener(e -> Controller.undo());
+    undo.setEnabled(false);
+    undo.setPreferredSize(new Dimension(40, 40));
+    ButtonComponent redo = new ButtonComponent(REDO, controlPanel);
+    redo.addActionListener(e -> Controller.redo());
+    redo.setEnabled(false);
+    redo.setPreferredSize(new Dimension(40, 40));
+
+    Controller.addStateChangeListener(() -> {
+      undo.setEnabled(Controller.canUndo());
+      redo.setEnabled(Controller.canRedo());
+    });
+
+    controlPanel.add(undo);
+    controlPanel.add(redo);
+
+    controlPanel.setPreferredSize(new Dimension(120, 60));
+
+    return controlPanel;
+  }
+
+  private static Container createCommonArea(Container controllers, Container controlPanel) {
+    JLayeredPane layered = new JLayeredPane();
+    layered.addComponentListener(new ComponentAdapter() {
+      @Override
+      public void componentResized(ComponentEvent e) {
+        controllers.setBounds(0, 0, layered.getWidth(), layered.getHeight());
+        Dimension d = controlPanel.getPreferredSize();
+        controlPanel.setBounds(0, layered.getHeight() - d.height, d.width, d.height);
+      }
+    });
+    layered.setBackground(EMPTY_COLOR);
+    layered.add(controllers);
+    layered.add(controlPanel);
+    return layered;
   }
 
   private static void populateController(ButtonComponentGlowPanel panel, Device device, List<Button> buttons) {
@@ -163,7 +222,11 @@ public class UI {
       }
 
       JButton buttonComponent = new ButtonComponent(button, panel);
-      buttonComponent.addActionListener(e -> Controller.pressButton(device, button.remoteCommand, button.savesInput, true));
+      buttonComponent.addActionListener(e -> {
+        Controller.pressButton(device, button.remoteCommand, button.savesInput, true);
+        if (button.savesInput)
+          Controller.saveStateToHistory();
+      });
 
       SpringLayout layout = new SpringLayout();
       JPanel container = new JPanel(layout);
@@ -205,6 +268,7 @@ public class UI {
         for (CompundButton.DeviceCommand deviceCommand : button.deviceCommands) {
           Controller.pressButton(deviceCommand.device, deviceCommand.remoteCommand, true, false);
         }
+        Controller.saveStateToHistory();
       });
       panel.add(buttonComponent);
     }

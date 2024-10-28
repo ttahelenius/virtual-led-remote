@@ -46,7 +46,7 @@ public class ButtonComponent extends JButton {
     if (container.isHeld(this)) {
       paintButtonBevel(g2d);
       g2d.translate(1.8, 3.0);
-    } else {
+    } else if (isEnabled()) {
       paintButtonShadow(g2d);
     }
 
@@ -121,10 +121,14 @@ public class ButtonComponent extends JButton {
       g.setStroke(new BasicStroke(3));
       g.setPaint(getBevelColor());
       g.drawRoundRect(4, 3, getWidth() - 7, getHeight() - 7, 8, 8);
+    } else if (!isEnabled()) {
+      g.setStroke(new BasicStroke(2));
+      g.setPaint(getDisabledBorderColor());
+      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, 6, 6);
     } else {
       g.setStroke(new BasicStroke(1));
       g.setPaint(Color.WHITE);
-      g.drawRoundRect(4, 4, getWidth() - 8, getHeight() - 8, 6, 6);
+      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, 6, 6);
     }
   }
 
@@ -151,9 +155,10 @@ public class ButtonComponent extends JButton {
     for (int i = 0; i < n; i++) {
       Paint paint;
       if (bg.discrete)
-        paint = bg.colors.get(i);
+        paint = modify(bg.colors.get(i));
       else
-        paint = new GradientPaint((float)(x + w * i/n), 0f, bg.colors.get(i), (float)(x + w * (i+1)/n), 0f, bg.colors.get(i+1));
+        paint = new GradientPaint((float)(x + w * i/n), 0f, modify(bg.colors.get(i)),
+                                  (float)(x + w * (i+1)/n), 0f, modify(bg.colors.get(i+1)));
       g.setPaint(paint);
       g.fillRect(x + w * i/n, y, w*(i+1)/n - w*i/n, h); // Mathematically w(i+1)/n - wi/n = w/n but this accounts for rounding
     }
@@ -186,8 +191,16 @@ public class ButtonComponent extends JButton {
     g.setComposite(AlphaComposite.SrcOver);
   }
 
+  private Color modify(Color color) {
+    return isEnabled() ? color : color.darker();
+  }
+
   private Color getBevelColor() {
     return mix(0.7f, AdditiveBlendComposite.mix(button.background.colors), container.getBackground().darker().darker());
+  }
+
+  private Color getDisabledBorderColor() {
+    return mix(0.5f, AdditiveBlendComposite.mix(button.background.colors), container.getBackground().darker());
   }
 
   public static Color mix(float f, Color color1, Color color2) {
