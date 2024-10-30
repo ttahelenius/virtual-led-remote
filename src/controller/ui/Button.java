@@ -4,7 +4,6 @@ import java.awt.*;
 import java.util.List;
 
 import static controller.ui.Button.InputSaving.SAVES_INPUT;
-import static java.util.Arrays.asList;
 
 public class Button {
 
@@ -88,7 +87,7 @@ public class Button {
     public boolean discrete;
 
     Gradient(Color... colors) {
-      this.colors = asList(colors);
+      this.colors = List.of(colors);
     }
 
     Gradient discrete() {

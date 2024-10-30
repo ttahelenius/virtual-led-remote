@@ -6,7 +6,6 @@ import java.awt.*;
 import java.util.List;
 
 import static controller.Device.*;
-import static java.util.Arrays.asList;
 
 class CompundButton extends Button {
 
@@ -18,7 +17,7 @@ class CompundButton extends Button {
 
   CompundButton(Gradient gradient, String potLedCommand, String backLedCommand, String frontLedCommand) {
     super(null, gradient, null);
-    this.deviceCommands = asList(
+    this.deviceCommands = List.of(
         new DeviceCommand(BACKLED, backLedCommand),
         new DeviceCommand(FRONTLED, frontLedCommand),
         new DeviceCommand(POTLED, potLedCommand)
