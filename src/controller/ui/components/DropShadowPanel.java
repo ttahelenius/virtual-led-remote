@@ -5,7 +5,6 @@ import java.awt.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -88,8 +87,8 @@ public class DropShadowPanel extends JPanel {
       return this;
     }
 
-    public Builder setShadowCastingSubComponents(Component... shadowCastingSubComponents) {
-      this.shadowCastingSubComponents = asList(shadowCastingSubComponents);
+    public Builder setShadowCastingSubComponents(List<Component> shadowCastingSubComponents) {
+      this.shadowCastingSubComponents = shadowCastingSubComponents;
       return this;
     }
 

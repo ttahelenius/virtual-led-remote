@@ -22,6 +22,23 @@ public class AspectRatioPreservingPanel extends ButtonComponentGlowPanel {
     this.siblings = new ArrayList<>();
   }
 
+  public static void registerSiblings(List<AspectRatioPreservingPanel> siblings) {
+    if (siblings.isEmpty())
+      return;
+    AspectRatioPreservingPanel first = siblings.get(0);
+    for (AspectRatioPreservingPanel sibling : siblings) {
+      if (sibling == first)
+        continue;
+      first.registerSibling(sibling);
+      sibling.registerSibling(first);
+    }
+    registerSiblings(siblings.subList(1, siblings.size()));
+  }
+
+  private void registerSibling(AspectRatioPreservingPanel sibling) {
+    siblings.add(sibling);
+  }
+
   @Override
   public Dimension getPreferredSize() {
     float w = calculatePreferredWidth();
@@ -32,10 +49,6 @@ public class AspectRatioPreservingPanel extends ButtonComponentGlowPanel {
       return new Dimension(0, 0);
     float h = w / aspectRatio;
     return new Dimension((int) w - margin, (int) h - margin);
-  }
-
-  public void registerSibling(AspectRatioPreservingPanel sibling) {
-    siblings.add(sibling);
   }
 
   private float calculatePreferredWidth() {
