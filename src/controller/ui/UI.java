@@ -112,18 +112,12 @@ public class UI {
   }
 
   private static JPanel createControllers() {
-    AspectRatioPreservingPanel potLedController, backLedController, frontLedController;
-
     List<AspectRatioPreservingPanel> controllers = List.of(
-      potLedController   = new AspectRatioPreservingPanel(new GridLayout(7, 4, -4, -4),  0.56f, 5),
-      backLedController  = new AspectRatioPreservingPanel(new GridLayout(6, 4, -4, -4),  0.65f, 5),
-      frontLedController = new AspectRatioPreservingPanel(new GridLayout(12, 4, -4, -4), 0.35f, 5)
+      createController(7,  4, Device.POTLED,   Buttons.POTLED_BUTTONS),
+      createController(6,  4, Device.BACKLED,  Buttons.BACKLED_BUTTONS),
+      createController(12, 4, Device.FRONTLED, Buttons.FRONTLED_BUTTONS)
     );
     AspectRatioPreservingPanel.registerSiblings(controllers);
-
-    populateController(potLedController,   Device.POTLED,   Buttons.POTLED_BUTTONS);
-    populateController(backLedController,  Device.BACKLED,  Buttons.BACKLED_BUTTONS);
-    populateController(frontLedController, Device.FRONTLED, Buttons.FRONTLED_BUTTONS);
 
     Container controllerArea = new JPanel(new GridLayout(1, controllers.size(), 40, 0));
     controllerArea.setBackground(EMPTY_COLOR);
@@ -157,10 +151,35 @@ public class UI {
     return dropShadowPanel;
   }
 
+  private static AspectRatioPreservingPanel createController(int rows, int cols, Device device, List<Button> buttons) {
+    SpringLayout layout = new SpringLayout();
+
+    float flatness = 1.08f;
+
+    float top = 0.4f / rows;
+    float bottom = 1f / rows;
+    float left = 0.03f;
+    float right = 0.03f;
+    float aspectRatio = (cols / (1f - left - right)) / (rows / (1f - top - bottom)) * flatness;
+
+    AspectRatioPreservingPanel controller = new AspectRatioPreservingPanel(layout, aspectRatio, 5);
+    JPanel buttonArea = new JPanel(new GridLayout(rows, cols, -4, -4));
+    populateController(controller, buttonArea, device, buttons);
+
+    buttonArea.setBackground(EMPTY_COLOR);
+    Spring pw = layout.getConstraint(SpringLayout.WIDTH,  controller);
+    Spring ph = layout.getConstraint(SpringLayout.HEIGHT, controller);
+    SpringLayout.Constraints c = layout.getConstraints(buttonArea);
+    c.setX(Spring.scale(pw, left));
+    c.setY(Spring.scale(ph, top));
+    c.setWidth(Spring.scale(pw,  1f - left - right));
+    c.setHeight(Spring.scale(ph, 1f - top - bottom));
+    controller.add(buttonArea);
+    return controller;
+  }
+
   private static Border getControllerBorder() {
-    Border subBorder1 = BorderFactory.createCompoundBorder(createRaisedBevelBorder(), createRaisedBevelBorder());
-    Border subBorder2 = BorderFactory.createEmptyBorder(20, 10, 40, 10);
-    return BorderFactory.createCompoundBorder(subBorder1, subBorder2);
+    return BorderFactory.createCompoundBorder(createRaisedBevelBorder(), createRaisedBevelBorder());
   }
 
   private static Container createControlPanel() {
@@ -208,14 +227,14 @@ public class UI {
     return layered;
   }
 
-  private static void populateController(ButtonComponentGlowPanel panel, Device device, List<Button> buttons) {
+  private static void populateController(ButtonComponentGlowPanel controller, JPanel buttonArea, Device device, List<Button> buttons) {
     for (Button button : buttons) {
       if (button == null) {
-        panel.add(BUTTON_PLACEHOLDER_SUPPLIER.get());
+        buttonArea.add(BUTTON_PLACEHOLDER_SUPPLIER.get());
         continue;
       }
 
-      JButton buttonComponent = new ButtonComponent(button, panel);
+      JButton buttonComponent = new ButtonComponent(button, controller);
       buttonComponent.addActionListener(e -> {
         Controller.pressButton(device, button.remoteCommand, button.savesInput, true);
         if (button.savesInput)
@@ -234,7 +253,7 @@ public class UI {
       c.setWidth(Spring.scale(pw,  1f - margin*2f));
       c.setHeight(Spring.scale(ph, 1f - margin*2f));
       container.add(buttonComponent);
-      panel.add(container);
+      buttonArea.add(container);
     }
   }
 
