@@ -54,6 +54,7 @@ public class DynamicButtonPanel extends ButtonComponentGlowPanel {
     this.addComponentListener(new ComponentAdapter() {
       @Override
       public void componentResized(ComponentEvent e) {
+        getRootPane().revalidate();
         refreshLayout();
         getRootPane().repaint();
       }
@@ -144,10 +145,8 @@ public class DynamicButtonPanel extends ButtonComponentGlowPanel {
       Dimension d = new Dimension(w, 0);
       filler.changeShape(d, d, d);
     }
-    if (previousActiveShelves != activeShelves) {
+    if (previousActiveShelves != activeShelves)
       setPreferredSize(new Dimension(1, layerHeights[activeShelves-1]));
-      revalidate();
-    }
   }
 
   @Override
