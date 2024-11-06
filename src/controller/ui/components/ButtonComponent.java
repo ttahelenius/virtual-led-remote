@@ -42,11 +42,12 @@ public class ButtonComponent extends JButton {
     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     Shape originalClip = g.getClip();
 
-    setClipForLightingEffects(g);
     if (container.isHeld(this)) {
+      setClipForBevel(g);
       paintButtonBevel(g2d);
-      g2d.translate(1.8, 3.0);
+      g2d.translate(getButtonDepressX(), getButtonDepressY());
     } else if (isEnabled()) {
+      setClipForLightingEffects(g);
       paintButtonShadow(g2d);
     }
 
@@ -55,28 +56,49 @@ public class ButtonComponent extends JButton {
 
     setClipForButton(g);
     paintButton(g2d, getWidth(), getHeight());
+
+    setClipForBorder(g);
     paintButtonBorder(g2d);
 
-    g.setClip(originalClip);
-
+    getClipForBevelBorder(g);
     paintButtonBevelBorder(g2d);
+
+    g.setClip(originalClip);
+  }
+
+  private static final double DEPRESS_AMOUNT = 1.0;
+
+  private int getButtonDepressX() {
+    return (int)(2.0 * DEPRESS_AMOUNT * getWidth() / 48.0);
+  }
+
+  private int getButtonDepressY() {
+    return (int)(3.5 * DEPRESS_AMOUNT * getWidth() / 48.0);
+  }
+
+  private void setClipForBevel(Graphics g) {
+    g.setClip(new RoundRectangle2D.Double(4, 4, getWidth() - 8, getHeight() - 8, r()-2, r()-2));
   }
 
   private void setClipForLightingEffects(Graphics g) {
-    if (container.isHeld(this))
-      setClipForHeldButton(g);
-    else
-      g.setClip(0, 0, getWidth() + 4, getHeight() + 4);
+    g.setClip(0, 0, getWidth() + 4, getHeight() + 4);
   }
 
   private void setClipForErasingOriginalBorder(Graphics g) {
     if (container.isHeld(this))
       setClipForHeldButton(g);
     else
-      g.setClip(new RoundRectangle2D.Double(4, 3, getWidth() - 8, getHeight() - 7, 6, 6));
+      g.setClip(new RoundRectangle2D.Double(4, 3, getWidth() - 8, getHeight() - 7, r()-4, r()-4));
   }
 
   private void setClipForButton(Graphics g) {
+    if (container.isHeld(this))
+      setClipForHeldButton(g);
+    else
+      g.setClip(new RoundRectangle2D.Double(3, 3, getWidth() - 6, getHeight() - 6, r()+2, r()+2));
+  }
+
+  private void setClipForBorder(Graphics g) {
     if (container.isHeld(this))
       setClipForHeldButton(g);
     else
@@ -84,7 +106,11 @@ public class ButtonComponent extends JButton {
   }
 
   private void setClipForHeldButton(Graphics g) {
-    g.setClip(new RoundRectangle2D.Double(1, 2, getWidth() - 5, getHeight() - 8, 12, 12));
+    g.setClip(new RoundRectangle2D.Double(6 - getButtonDepressX(), 6 - getButtonDepressY(), getWidth() - 9, getHeight() - 9, r()-1, r()-1));
+  }
+
+  private void getClipForBevelBorder(Graphics g) {
+    g.setClip(-getButtonDepressX(), -getButtonDepressY(), getWidth() + 4, getHeight() + 4);
   }
 
   @Override
@@ -101,43 +127,48 @@ public class ButtonComponent extends JButton {
   }
 
   private void paintButtonBevel(Graphics2D g) {
-    g.setStroke(new BasicStroke(3));
+    g.setStroke(new BasicStroke(getButtonDepressY()));
     g.setPaint(getBevelColor());
-    g.fillRoundRect(4, 4, getWidth() - 7, getHeight() - 7, 10, 10);
+    g.fillRoundRect(4 - getButtonDepressX(), 5 - getButtonDepressY(), getWidth() + 4, getHeight() + 4, r()-2, r()-2);
   }
 
   private void paintButtonShadow(Graphics2D g) {
-    g.setStroke(new BasicStroke(2));
+    float factor = getWidth() / 48f;
+    g.setStroke(new BasicStroke(2f * factor));
     g.setPaint(new Color(0, 0, 0, 20));
-    g.fillRoundRect(5, 6, getWidth() - 5, getHeight() - 5, 8, 8);
+    g.fillRoundRect(5, 6, getWidth() - 7 + (int)(2f * factor), getHeight() - 8 + (int)(3f * factor), r()+2, r()+2);
   }
 
   private void paintButtonBorder(Graphics2D g) {
     if (container.isGlowing(this)) {
       g.setStroke(new BasicStroke(3));
       g.setPaint(Color.WHITE);
-      g.drawRoundRect(3, 3, getWidth() - 7, getHeight() - 6, 8, 8);
+      g.drawRoundRect(3, 3, getWidth() - 7, getHeight() - 6, r(), r());
     } else if (container.isHeld(this)) {
-      g.setStroke(new BasicStroke(3));
+      g.setStroke(new BasicStroke(14));
       g.setPaint(getBevelColor());
-      g.drawRoundRect(4, 3, getWidth() - 7, getHeight() - 7, 8, 8);
+      g.drawRoundRect(0, -1, getWidth() - 1, getHeight() - 2, r()+10, r()+10);
     } else if (!isEnabled()) {
       g.setStroke(new BasicStroke(2));
       g.setPaint(getDisabledBorderColor());
-      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, 6, 6);
+      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, r()-2, r()-2);
     } else {
       g.setStroke(new BasicStroke(1));
       g.setPaint(Color.WHITE);
-      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, 6, 6);
+      g.drawRoundRect(4, 3, getWidth() - 8, getHeight() - 7, r()-2, r()-2);
     }
   }
 
   private void paintButtonBevelBorder(Graphics2D g) {
     if (container.isHeld(this)) {
-      g.setStroke(new BasicStroke(2));
+      g.setStroke(new BasicStroke((int)(getWidth() / 20.0)));
       g.setPaint(mix(.5f, getBevelColor(), container.getBackground()));
-      g.drawRoundRect(2, 1, getWidth() - 6, getHeight() - 7, 8, 8);
+      g.drawRoundRect(3 - getButtonDepressX(), 3 - getButtonDepressY(), getWidth() - 7, getHeight() - 6, r()+3, r()+3);
     }
+  }
+
+  private int r() {
+    return (int)(getWidth() / 5.0);
   }
 
   private void paintButton(Graphics2D g, int width, int height) {
