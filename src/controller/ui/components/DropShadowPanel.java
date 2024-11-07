@@ -42,7 +42,7 @@ public class DropShadowPanel extends JPanel {
   protected void paintComponent(Graphics g) {
     super.paintComponent(g);
 
-    ((Graphics2D)g).setComposite(AlphaComposite.SrcOver);
+    ((Graphics2D)g).setComposite(SubtractiveBlendComposite.INSTANCE);
 
     for (Component c : shadowCastingSubComponents) {
       if (c.getWidth() == 0 && c.getHeight() == 0)
@@ -51,13 +51,15 @@ public class DropShadowPanel extends JPanel {
       int h = c.getHeight() - penumbraWidth;
       Point position = SwingUtilities.convertPoint(c, offset.x + penumbraWidth / 2, offset.y + penumbraWidth / 2, this);
       for (int i = 1; i < penumbraWidth; i++) {
-        ((Graphics2D) g).setPaint(new Color(0, 0, 0, shadowAlphas[i-1]));
+        ((Graphics2D) g).setPaint(new Color(shadowAlphas[i-1], shadowAlphas[i-1], shadowAlphas[i-1]));
         int arc = 2 * i;
         g.drawRoundRect(position.x - i, position.y - i, w - 1 + 2 * i, h - 1 + 2 * i, arc, arc);
       }
-      g.setColor(new Color(0, 0, 0, umbraAlpha));
+      g.setColor(new Color(umbraAlpha, umbraAlpha, umbraAlpha));
       g.fillRect(position.x, position.y, w, h);
     }
+
+    ((Graphics2D)g).setComposite(AlphaComposite.SrcOver);
   }
 
   public static class Builder {
