@@ -23,6 +23,9 @@ import static java.awt.geom.AffineTransform.getScaleInstance;
  */
 public class ButtonComponent extends JButton {
 
+  private static final float DEPRESS_AMOUNT = 1.0f;
+  private static final float SHADOW_DISTANCE = 0.8f;
+
   final controller.ui.Button button;
   private final ButtonComponentGlowPanel container;
 
@@ -47,7 +50,7 @@ public class ButtonComponent extends JButton {
       paintButtonBevel(g2d);
       g2d.translate(getButtonDepressX(), getButtonDepressY());
     } else if (isEnabled()) {
-      setClipForLightingEffects(g);
+      setClipForShadow(g);
       paintButtonShadow(g2d);
     }
 
@@ -66,22 +69,28 @@ public class ButtonComponent extends JButton {
     g.setClip(originalClip);
   }
 
-  private static final double DEPRESS_AMOUNT = 1.0;
-
   private int getButtonDepressX() {
-    return (int)(2.0 * DEPRESS_AMOUNT * getWidth() / 48.0);
+    return (int)(2f * DEPRESS_AMOUNT * getWidth() / 48f);
   }
 
   private int getButtonDepressY() {
-    return (int)(3.5 * DEPRESS_AMOUNT * getWidth() / 48.0);
+    return (int)(3.5f * DEPRESS_AMOUNT * getWidth() / 48f);
+  }
+
+  private int getShadowX() {
+    return (int)(2.2f * SHADOW_DISTANCE * getWidth() / 48f);
+  }
+
+  private int getShadowY() {
+    return (int)(4f * SHADOW_DISTANCE * getWidth() / 48f);
   }
 
   private void setClipForBevel(Graphics g) {
     g.setClip(new RoundRectangle2D.Double(4, 4, getWidth() - 8, getHeight() - 8, r()-2, r()-2));
   }
 
-  private void setClipForLightingEffects(Graphics g) {
-    g.setClip(0, 0, getWidth() + 4, getHeight() + 4);
+  private void setClipForShadow(Graphics g) {
+    g.setClip(0, 0, getWidth() + getShadowX(), getHeight() + getShadowY());
   }
 
   private void setClipForErasingOriginalBorder(Graphics g) {
@@ -133,10 +142,10 @@ public class ButtonComponent extends JButton {
   }
 
   private void paintButtonShadow(Graphics2D g) {
-    float factor = getWidth() / 48f;
-    g.setStroke(new BasicStroke(2f * factor));
-    g.setPaint(new Color(0, 0, 0, 20));
-    g.fillRoundRect(5, 6, getWidth() - 7 + (int)(2f * factor), getHeight() - 8 + (int)(3f * factor), r()+2, r()+2);
+    g.setComposite(SubtractiveBlendComposite.INSTANCE);
+    g.setPaint(new Color(25, 25, 25));
+    g.fillRoundRect(7, 8, getWidth() - 9 + getShadowX(), getHeight() - 10 + getShadowY(), r()+2, r()+2);
+    g.setComposite(AlphaComposite.SrcOver);
   }
 
   private void paintButtonBorder(Graphics2D g) {

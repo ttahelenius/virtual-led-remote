@@ -138,8 +138,8 @@ public class UI {
 
     JPanel dropShadowPanel = new DropShadowPanel.Builder()
         .setLayout(new BorderLayout())
-        .setOffset(new Point(16, 30))
-        .setUmbraAlpha(90)
+        .setOffset(new Point(33, 60))
+        .setUmbraAlpha(25)
         .setPenumbraWidth(15)
         .setShadowCastingSubComponents(shadowCasters)
         .create();
