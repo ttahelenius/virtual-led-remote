@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import static java.lang.Math.min;
 
 /**
  * A JPanel that paints glow around the {@link ButtonComponent} currently under the mouse cursor. Additional
@@ -15,6 +19,7 @@ public class ButtonComponentGlowPanel extends JPanel {
 
   private ButtonComponent hovered;
   private ButtonComponent held;
+  private Set<ButtonComponent> buttons = new HashSet<>();
 
   public ButtonComponentGlowPanel() {
     super();
@@ -28,13 +33,14 @@ public class ButtonComponentGlowPanel extends JPanel {
     List<Component> components = ComponentUtil.gatherComponents(comp);
     for (Component panelComponent : components) {
       if (panelComponent instanceof ButtonComponent) {
-        registedAddedButton(panelComponent);
+        registedAddedButton((ButtonComponent)panelComponent);
       }
     }
   }
 
-  private void registedAddedButton(Component comp) {
+  private void registedAddedButton(ButtonComponent comp) {
     comp.addMouseListener(new ButtonMouseListener(comp));
+    buttons.add(comp);
   }
 
   boolean isHeld(ButtonComponent button) {
@@ -55,10 +61,20 @@ public class ButtonComponentGlowPanel extends JPanel {
   protected void paintComponent(Graphics g) {
     super.paintComponent(g);
 
+    Graphics2D g2d = (Graphics2D)g;
+
+    for (ButtonComponent button : buttons) {
+      if (!button.isEnabled() || isHeld(button))
+        continue;
+      Point p = SwingUtilities.convertPoint(button.getParent(), button.getLocation(), this);
+      g2d.translate(p.getX(), p.getY());
+      button.paintButtonShadow(g2d);
+      g2d.translate(-p.getX(), -p.getY());
+    }
+
     if (hovered == null || !hovered.isEnabled())
       return;
 
-    Graphics2D g2d = (Graphics2D)g;
     g2d.setComposite(AdditiveBlendComposite.INSTANCE);
 
     Point position = SwingUtilities.convertPoint(hovered, hovered.getWidth() / 2, hovered.getHeight() / 2, this);
@@ -67,13 +83,10 @@ public class ButtonComponentGlowPanel extends JPanel {
 
     // Rougly exponential decay for light of color balanced by perceived luminance of the color:
     float luminance = 0.2126f*color.getRed() + 0.7152f*color.getGreen() + 0.0722f*color.getBlue();
-    float balancingFactor = Math.min(120f / luminance, 1f) * (isGlowing(hovered) ? 1f : .3f);
-    float f  = balancingFactor;
-    float f2 = balancingFactor * .35f;
-    float f3 = balancingFactor * .12f;
-    Color darkened =  new Color((int) (color.getRed() * f),  (int) (color.getGreen() * f),  (int) (color.getBlue() * f));
-    Color darkened2 = new Color((int) (color.getRed() * f2), (int) (color.getGreen() * f2), (int) (color.getBlue() * f2));
-    Color darkened3 = new Color((int) (color.getRed() * f3), (int) (color.getGreen() * f3), (int) (color.getBlue() * f3));
+    float balancingFactor = min(120f / luminance, 1f) * (isGlowing(hovered) ? 1.2f : .3f);
+    Color darkened =  getDarkened(color, balancingFactor);
+    Color darkened2 = getDarkened(color, balancingFactor * .35f);
+    Color darkened3 = getDarkened(color, balancingFactor * .12f);
     Color[] colors = {darkened, darkened, darkened2, darkened3, Color.BLACK};
     float[] fractions = {0f, .15f, .3f, .6f, 1f};
 
@@ -82,6 +95,14 @@ public class ButtonComponentGlowPanel extends JPanel {
     g2d.fillRect(position.x - r, position.y - r, 2 * r, 2 * r);
 
     g2d.setComposite(AlphaComposite.SrcOver);
+  }
+
+  private static Color getDarkened(Color color, float factor) {
+    return new Color(
+        (int) min(255f, color.getRed() * factor),
+        (int) min(255f, color.getGreen() * factor),
+        (int) min(255f, color.getBlue() * factor)
+    );
   }
 
   private class ButtonMouseListener extends MouseAdapter {

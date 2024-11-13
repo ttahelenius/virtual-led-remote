@@ -49,9 +49,6 @@ public class ButtonComponent extends JButton {
       setClipForBevel(g);
       paintButtonBevel(g2d);
       g2d.translate(getButtonDepressX(), getButtonDepressY());
-    } else if (isEnabled()) {
-      setClipForShadow(g);
-      paintButtonShadow(g2d);
     }
 
     setClipForErasingOriginalBorder(g);
@@ -87,10 +84,6 @@ public class ButtonComponent extends JButton {
 
   private void setClipForBevel(Graphics g) {
     g.setClip(new RoundRectangle2D.Double(4, 4, getWidth() - 8, getHeight() - 8, r()-2, r()-2));
-  }
-
-  private void setClipForShadow(Graphics g) {
-    g.setClip(0, 0, getWidth() + getShadowX(), getHeight() + getShadowY());
   }
 
   private void setClipForErasingOriginalBorder(Graphics g) {
@@ -141,7 +134,7 @@ public class ButtonComponent extends JButton {
     g.fillRoundRect(4 - getButtonDepressX(), 5 - getButtonDepressY(), getWidth() + 4, getHeight() + 4, r()-2, r()-2);
   }
 
-  private void paintButtonShadow(Graphics2D g) {
+  void paintButtonShadow(Graphics2D g) {
     g.setComposite(SubtractiveBlendComposite.INSTANCE);
     g.setPaint(new Color(25, 25, 25));
     g.fillRoundRect(7, 8, getWidth() - 9 + getShadowX(), getHeight() - 10 + getShadowY(), r()+2, r()+2);
