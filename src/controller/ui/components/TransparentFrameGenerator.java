@@ -79,6 +79,8 @@ public class TransparentFrameGenerator extends DefaultMetalTheme {
 
   @Override
   public ColorUIResource getControl() {
+    if (System.getProperty("nonTransparent") != null)
+      return new ColorUIResource(BORDER_COLOR_ACTIVE);
     return null;
   }
 
@@ -109,6 +111,8 @@ public class TransparentFrameGenerator extends DefaultMetalTheme {
 
   @Override
   public ColorUIResource getWindowTitleInactiveBackground() {
+    if (System.getProperty("nonTransparent") != null)
+      return new ColorUIResource(BORDER_COLOR_ACTIVE);
     return new ColorUIResource(BORDER_COLOR);
   }
 
@@ -128,7 +132,8 @@ public class TransparentFrameGenerator extends DefaultMetalTheme {
     private final Timer transparencyRepaintTimer;
 
     private CustomMetalFrame() {
-      setBackground(EMPTY_COLOR);
+      if (System.getProperty("nonTransparent") == null)
+        setBackground(EMPTY_COLOR);
       getRootPane().setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 3));
       JPanel panel = new JPanel() {
         @Override
@@ -184,7 +189,8 @@ public class TransparentFrameGenerator extends DefaultMetalTheme {
         transparencyRepaintTimer.restart();
         return;
       }
-      setBackground(EMPTY_COLOR);
+      if (System.getProperty("nonTransparent") == null)
+        setBackground(EMPTY_COLOR);
       repaint();
     }
   }

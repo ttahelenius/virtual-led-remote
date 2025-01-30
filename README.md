@@ -29,6 +29,19 @@ java -cp out controller.Controller
 
 Now the GUI should be functional, although it'll throw warnings until configured further (see [Configuration](#configuration)).
 
+<details>
+<summary>
+Troubleshooting
+</summary>
+
+Some systems may be incompatible with window transparency, leading to errors and glitches. In such case the following options should help:
+```bash
+java -Dsun.java2d.xrender=false -DnonTransparent -cp out controller.Controller
+```
+Also, if the font SansSerif is not installed, some icons may be missing from the buttons. These can be replaced with any character or text in [controller.ui.Buttons](https://github.com/ttahelenius/virtual-led-remote/blob/main/src/controller/ui/Buttons.java).
+
+</details>
+
 ![image](https://github.com/user-attachments/assets/b914f56b-bfee-4a47-a387-8124363e66ef)
 
 ### **Configuration**
